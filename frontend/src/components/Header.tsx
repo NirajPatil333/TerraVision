@@ -24,18 +24,12 @@ export const Header: React.FC<HeaderProps> = ({ health }) => {
           <div>
             <div className="flex items-center space-x-2">
               <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-100 via-slate-200 to-cyan-300 bg-clip-text text-transparent">
-                DepthWizard
-              </span>
-              <span className="text-xs px-2 py-0.5 font-semibold rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800/60 tracking-wide">
-                SIH26175
-              </span>
-              <span className="text-xs px-2 py-0.5 font-semibold rounded-full bg-slate-900 text-slate-400 border border-slate-800">
-                SIH 2026
+                TerraVision
               </span>
             </div>
             <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
               <Compass className="w-3.5 h-3.5 text-cyan-400" />
-              Single-View Height Estimation & Interactive 3D Flythrough
+              Single-View Terrain Reconstruction & 3D Visualization
             </p>
           </div>
         </div>
@@ -50,7 +44,10 @@ export const Header: React.FC<HeaderProps> = ({ health }) => {
           </div>
 
           {/* Hardware Engine Pill */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs" title={deviceName}>
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs"
+            title={deviceName}
+          >
             <Cpu className={`w-3.5 h-3.5 ${isCuda ? 'text-emerald-400' : 'text-cyan-400'}`} />
             <span className="font-mono text-slate-400">Compute:</span>
             <span className={`font-medium ${isCuda ? 'text-emerald-400' : 'text-cyan-300'}`}>

@@ -1,6 +1,5 @@
 """
-DepthWizard - FastAPI Backend Server
-Project: DepthWizard — SIH26175
+FastAPI Backend Server
 Single-View Height Estimation and 3D Flythrough
 """
 import time
@@ -21,22 +20,22 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
-logger = logging.getLogger("depthwizard.main")
+logger = logging.getLogger("height_estimation.main")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Eagerly initialize model on startup
-    logger.info("Initializing DepthWizard AI inference pipeline...")
+    logger.info("Initializing AI inference pipeline...")
     try:
         DepthAnythingV2Model.get_instance()
         logger.info("Model pipeline ready.")
     except Exception as e:
         logger.error(f"Failed to preload model: {e}")
     yield
-    logger.info("Shutting down DepthWizard backend.")
+    logger.info("Shutting down backend.")
 
 app = FastAPI(
-    title="DepthWizard API — SIH26175",
+    title="Single-View Height Estimation API",
     description="Single-View Height Estimation and 3D Terrain Reconstruction Engine",
     version="1.0.0",
     lifespan=lifespan
@@ -115,7 +114,7 @@ def run_pipeline(image_bytes: bytes, filename: str, colormap: str = "turbo", fas
 async def health_check():
     return {
         "status": "online",
-        "project": "DepthWizard — SIH26175",
+        "project": "Single-View Height Estimation and 3D Flythrough",
         "device": DEVICE_INFO,
         "model": "Depth Anything V2 Small (ViT-S)",
         "pipeline_ready": DepthAnythingV2Model._instance is not None

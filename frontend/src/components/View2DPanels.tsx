@@ -69,7 +69,7 @@ export const View2DPanels: React.FC<View2DPanelsProps> = ({ images }) => {
                 Original Remote Sensing RGB
               </span>
               <button
-                onClick={() => downloadImage(images.original_rgb, 'depthwizard_rgb.jpg')}
+                onClick={() => downloadImage(images.original_rgb, 'original_rgb.jpg')}
                 className="p-1 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded transition"
                 title="Download RGB"
               >
@@ -96,7 +96,7 @@ export const View2DPanels: React.FC<View2DPanelsProps> = ({ images }) => {
                 Relative Depth / Disparity Map
               </span>
               <button
-                onClick={() => downloadImage(images.depth_colormap, 'depthwizard_depth_map.jpg')}
+                onClick={() => downloadImage(images.depth_colormap, 'relative_depth_map.jpg')}
                 className="p-1 text-slate-400 hover:text-amber-400 hover:bg-slate-800 rounded transition"
                 title="Download Depth Map"
               >
@@ -132,7 +132,7 @@ export const View2DPanels: React.FC<View2DPanelsProps> = ({ images }) => {
                 Relative Surface Relief Model
               </span>
               <button
-                onClick={() => downloadImage(images.surface_grayscale, 'depthwizard_surface_relief.jpg')}
+                onClick={() => downloadImage(images.surface_grayscale, 'surface_relief.jpg')}
                 className="p-1 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded transition"
                 title="Download Surface Relief"
               >

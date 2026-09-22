@@ -165,7 +165,7 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#070b14] text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-slate-950">
-      {/* Header */}
+      {/* Top Application Header */}
       <Header health={health} />
 
       {/* Main Content Dashboard */}
@@ -214,18 +214,6 @@ export const App: React.FC = () => {
         />
 
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950/80 py-4 mt-8">
-        <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-1">
-          <p>
-            <span className="font-semibold text-slate-400">DepthWizard — SIH26175</span> | Single-View Height Estimation and 3D Flythrough
-          </p>
-          <p className="text-[11px] text-slate-600">
-            Smart India Hackathon (SIH 2026) Prototype • Normalized Relative Elevation [0.0 - 1.0] • Phase 2 Metric Elevation Integration
-          </p>
-        </div>
-      </footer>
     </div>
   );
 };
