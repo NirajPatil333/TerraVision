@@ -20,10 +20,10 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ telemetry })
         ].map((item, idx) => {
           const Icon = item.icon;
           return (
-            <div key={idx} className="rounded-xl border border-slate-800/60 bg-slate-900/40 p-3.5 flex flex-col justify-between">
-              <div className="flex items-center justify-between text-slate-500 mb-2">
+            <div key={idx} className="rounded-lg border border-slate-800/70 bg-slate-900/40 p-3 flex flex-col justify-between">
+              <div className="flex items-center justify-between text-slate-500 mb-1.5">
                 <span className="text-[11px] font-medium">{item.label}</span>
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-3.5 h-3.5 text-slate-600" />
               </div>
               <div className="text-slate-600 font-mono text-base font-semibold">--</div>
             </div>
@@ -49,95 +49,95 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ telemetry })
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         
         {/* Resolution */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3.5 shadow-lg">
+        <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Resolution</span>
-            <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="text-[11px] font-medium">Resolution</span>
+            <Maximize2 className="w-3.5 h-3.5 text-slate-500" />
           </div>
-          <div className="font-mono text-base font-bold text-slate-100">
-            {image_width} <span className="text-slate-500 text-xs">×</span> {image_height}
+          <div className="font-mono text-base font-semibold text-slate-100">
+            {image_width} <span className="text-slate-500 text-xs font-normal">×</span> {image_height}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">RGB 24-bit input</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">RGB 24-bit raster</div>
         </div>
 
         {/* Inference Latency */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3.5 shadow-lg">
+        <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Inference Time</span>
-            <Clock className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-[11px] font-medium">Inference Time</span>
+            <Clock className="w-3.5 h-3.5 text-slate-500" />
           </div>
-          <div className="font-mono text-base font-bold text-amber-300">
+          <div className="font-mono text-base font-semibold text-slate-100">
             {inference_latency_ms.toFixed(0)} <span className="text-xs font-normal text-slate-400">ms</span>
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Depth Anything V2</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Depth Anything V2</div>
         </div>
 
         {/* Total Latency */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3.5 shadow-lg">
+        <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Total Pipeline</span>
-            <Activity className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-[11px] font-medium">Total Pipeline</span>
+            <Activity className="w-3.5 h-3.5 text-slate-500" />
           </div>
-          <div className="font-mono text-base font-bold text-emerald-300">
+          <div className="font-mono text-base font-semibold text-slate-100">
             {(total_latency_ms / 1000).toFixed(2)} <span className="text-xs font-normal text-slate-400">s</span>
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">End-to-end latency</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">End-to-end processing</div>
         </div>
 
         {/* Mesh Vertices */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3.5 shadow-lg">
+        <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Mesh Vertices</span>
-            <Layers className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="text-[11px] font-medium">Mesh Vertices</span>
+            <Layers className="w-3.5 h-3.5 text-slate-500" />
           </div>
-          <div className="font-mono text-base font-bold text-indigo-300">
+          <div className="font-mono text-base font-semibold text-slate-100">
             {mesh_vertices.toLocaleString()}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">128 × 128 height grid</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">128 × 128 vertex grid</div>
         </div>
 
         {/* Mesh Triangles */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3.5 shadow-lg">
+        <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">3D Triangles</span>
-            <Box className="w-3.5 h-3.5 text-purple-400" />
+            <span className="text-[11px] font-medium">3D Triangles</span>
+            <Box className="w-3.5 h-3.5 text-slate-500" />
           </div>
-          <div className="font-mono text-base font-bold text-purple-300">
+          <div className="font-mono text-base font-semibold text-slate-100">
             {mesh_triangles.toLocaleString()}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">WebGL polygon count</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Polygonal faces</div>
         </div>
 
         {/* Compute Device */}
-        <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-3.5 shadow-lg">
+        <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Device</span>
-            <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="text-[11px] font-medium">Compute Engine</span>
+            <Cpu className="w-3.5 h-3.5 text-slate-500" />
           </div>
-          <div className="font-mono text-xs font-bold text-cyan-300 truncate" title={device}>
+          <div className="font-mono text-sm font-semibold text-slate-100 truncate" title={device}>
             {device.includes('CUDA') ? 'CUDA GPU' : 'CPU (OpenCV)'}
           </div>
-          <div className="text-[10px] text-slate-400 mt-0.5">Auto-detected engine</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">Hardware backend</div>
         </div>
 
       </div>
 
       {/* Surface Telemetry Bar */}
       {surface_stats && (
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-300">Relative Surface Statistics:</span>
-            <span className="font-mono text-cyan-400 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-900/60">
-              Range: [{surface_stats.min_relative_elevation.toFixed(3)} - {surface_stats.max_relative_elevation.toFixed(3)}]
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-slate-950/60 border border-slate-800 text-xs">
+          <div className="flex items-center gap-3">
+            <span className="font-medium text-slate-300">Relative Surface Statistics:</span>
+            <span className="font-mono text-slate-200 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+              Range: [{surface_stats.min_relative_elevation.toFixed(3)} – {surface_stats.max_relative_elevation.toFixed(3)}]
             </span>
             <span className="font-mono text-slate-300">
-              Mean: <span className="text-emerald-400">{surface_stats.mean_relative_elevation.toFixed(3)}</span>
+              Mean: <strong className="text-slate-200">{surface_stats.mean_relative_elevation.toFixed(3)}</strong>
             </span>
             <span className="font-mono text-slate-300">
-              Std Dev: <span className="text-indigo-400">{surface_stats.std_relative_elevation.toFixed(3)}</span>
+              Std Dev: <strong className="text-slate-200">{surface_stats.std_relative_elevation.toFixed(3)}</strong>
             </span>
           </div>
-          <div className="font-mono text-[11px] text-slate-400 italic">
+          <div className="font-mono text-[11px] text-slate-500">
             Unit: Non-dimensional Relative Elevation
           </div>
         </div>

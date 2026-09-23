@@ -50,65 +50,195 @@ const TerrainMesh: React.FC<TerrainMeshProps> = ({
     return tex;
   }, [textureUrl, textureMode]);
 
-  // Create plane geometry and displace heights
-  const geometry = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(
+  // Top terrain surface geometry
+  const topGeometry = useMemo(() => {
+    return new THREE.PlaneGeometry(
       10,
       10,
       grid_width - 1,
       grid_height - 1
     );
-    return geo;
   }, [grid_width, grid_height]);
 
-  // Update vertex heights whenever exaggeration or height_map changes
+  // Base skirt & bottom plate geometry
+  const baseGeometry = useMemo(() => {
+    return new THREE.BufferGeometry();
+  }, [grid_width, grid_height]);
+
+  // Ordered perimeter vertex indices around the grid
+  const perimeterIndices = useMemo(() => {
+    const indices: number[] = [];
+    const w = grid_width;
+    const h = grid_height;
+
+    // South edge: iy = h - 1, ix from 0 to w - 1
+    for (let ix = 0; ix < w - 1; ix++) {
+      indices.push((h - 1) * w + ix);
+    }
+    // East edge: ix = w - 1, iy from h - 1 down to 0
+    for (let iy = h - 1; iy > 0; iy--) {
+      indices.push(iy * w + (w - 1));
+    }
+    // North edge: iy = 0, ix from w - 1 down to 0
+    for (let ix = w - 1; ix > 0; ix--) {
+      indices.push(0 * w + ix);
+    }
+    // West edge: ix = 0, iy from 0 up to h - 1
+    for (let iy = 0; iy < h - 1; iy++) {
+      indices.push(iy * w + 0);
+    }
+    return indices;
+  }, [grid_width, grid_height]);
+
+  // Update vertex heights and base geometry
   useEffect(() => {
-    if (!geometry || !height_map) return;
-    const pos = geometry.attributes.position;
+    if (!topGeometry || !baseGeometry || !height_map) return;
+    const pos = topGeometry.attributes.position;
     const heightFactor = 2.4 * exaggeration;
 
+    // Update top terrain surface heights
     for (let i = 0; i < pos.count; i++) {
       const h = height_map[i] ?? 0;
-      // In Three.js PlaneGeometry, Z is perpendicular to the plane
       pos.setZ(i, h * heightFactor);
     }
     pos.needsUpdate = true;
-    geometry.computeVertexNormals();
-  }, [geometry, height_map, exaggeration]);
+    topGeometry.computeVertexNormals();
+
+    // Solid vertical base underneath the terrain
+    const baseZ = -0.5;
+    const numPerimeter = perimeterIndices.length;
+    const totalVertices = numPerimeter * 6 + 6;
+    const basePositions = new Float32Array(totalVertices * 3);
+
+    let offset = 0;
+
+    // Side walls connecting terrain surface edges to the base
+    for (let i = 0; i < numPerimeter; i++) {
+      const idxA = perimeterIndices[i];
+      const idxB = perimeterIndices[(i + 1) % numPerimeter];
+
+      const ax = pos.getX(idxA);
+      const ay = pos.getY(idxA);
+      const az = pos.getZ(idxA);
+
+      const bx = pos.getX(idxB);
+      const by = pos.getY(idxB);
+      const bz = pos.getZ(idxB);
+
+      // Triangle 1: (A, A_base, B)
+      basePositions[offset++] = ax;
+      basePositions[offset++] = ay;
+      basePositions[offset++] = az;
+
+      basePositions[offset++] = ax;
+      basePositions[offset++] = ay;
+      basePositions[offset++] = baseZ;
+
+      basePositions[offset++] = bx;
+      basePositions[offset++] = by;
+      basePositions[offset++] = bz;
+
+      // Triangle 2: (B, A_base, B_base)
+      basePositions[offset++] = bx;
+      basePositions[offset++] = by;
+      basePositions[offset++] = bz;
+
+      basePositions[offset++] = ax;
+      basePositions[offset++] = ay;
+      basePositions[offset++] = baseZ;
+
+      basePositions[offset++] = bx;
+      basePositions[offset++] = by;
+      basePositions[offset++] = baseZ;
+    }
+
+    // Bottom plate closing the base
+    const pSW = { x: pos.getX((grid_height - 1) * grid_width), y: pos.getY((grid_height - 1) * grid_width) };
+    const pSE = { x: pos.getX((grid_height - 1) * grid_width + (grid_width - 1)), y: pos.getY((grid_height - 1) * grid_width + (grid_width - 1)) };
+    const pNE = { x: pos.getX(grid_width - 1), y: pos.getY(grid_width - 1) };
+    const pNW = { x: pos.getX(0), y: pos.getY(0) };
+
+    // Triangle 1: (SW, NE, SE)
+    basePositions[offset++] = pSW.x;
+    basePositions[offset++] = pSW.y;
+    basePositions[offset++] = baseZ;
+
+    basePositions[offset++] = pNE.x;
+    basePositions[offset++] = pNE.y;
+    basePositions[offset++] = baseZ;
+
+    basePositions[offset++] = pSE.x;
+    basePositions[offset++] = pSE.y;
+    basePositions[offset++] = baseZ;
+
+    // Triangle 2: (SW, NW, NE)
+    basePositions[offset++] = pSW.x;
+    basePositions[offset++] = pSW.y;
+    basePositions[offset++] = baseZ;
+
+    basePositions[offset++] = pNW.x;
+    basePositions[offset++] = pNW.y;
+    basePositions[offset++] = baseZ;
+
+    basePositions[offset++] = pNE.x;
+    basePositions[offset++] = pNE.y;
+    basePositions[offset++] = baseZ;
+
+    baseGeometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(basePositions, 3)
+    );
+    baseGeometry.computeVertexNormals();
+  }, [topGeometry, baseGeometry, height_map, exaggeration, perimeterIndices, grid_width, grid_height]);
 
   return (
-    <mesh
-      ref={meshRef}
-      geometry={geometry}
-      rotation={[-Math.PI / 2, 0, 0]}
-      receiveShadow
-      castShadow
-    >
-      {textureMode === 'shaded' ? (
+    <group rotation={[-Math.PI / 2, 0, 0]}>
+      {/* Top Displaced Terrain Surface */}
+      <mesh
+        ref={meshRef}
+        geometry={topGeometry}
+        receiveShadow
+        castShadow
+      >
+        {textureMode === 'shaded' ? (
+          <meshStandardMaterial
+            roughness={0.7}
+            metalness={0.1}
+            color="#cbd5e1"
+            wireframe={wireframe}
+            flatShading={false}
+          />
+        ) : (
+          <meshStandardMaterial
+            map={texture ?? undefined}
+            roughness={0.65}
+            metalness={0.05}
+            wireframe={wireframe}
+          />
+        )}
+      </mesh>
+
+      {/* Solid Vertical Base & Side Walls */}
+      <mesh
+        geometry={baseGeometry}
+        receiveShadow
+        castShadow
+      >
         <meshStandardMaterial
-          roughness={0.65}
+          color="#111827"
+          roughness={0.85}
           metalness={0.15}
-          color="#38bdf8"
-          wireframe={wireframe}
-          flatShading={false}
-          side={THREE.DoubleSide}
-        />
-      ) : (
-        <meshStandardMaterial
-          map={texture ?? undefined}
-          roughness={0.8}
-          metalness={0.1}
           wireframe={wireframe}
           side={THREE.DoubleSide}
         />
-      )}
-    </mesh>
+      </mesh>
+    </group>
   );
 };
 
 export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, images }) => {
   const controlsRef = useRef<any>(null);
-  const [exaggeration, setExaggeration] = useState<number>(1.2);
+  const [exaggeration, setExaggeration] = useState<number>(1.5);
   const [wireframe, setWireframe] = useState<boolean>(false);
   const [autoRotate, setAutoRotate] = useState<boolean>(false);
   const [showGrid, setShowGrid] = useState<boolean>(true);
@@ -130,10 +260,10 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, imag
 
   if (!meshData) {
     return (
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-12 text-center text-slate-500 h-[500px] flex flex-col items-center justify-center">
-        <Box className="w-12 h-12 mb-3 text-slate-700 animate-pulse" />
-        <h4 className="text-sm font-semibold text-slate-400">Interactive 3D Terrain Flythrough</h4>
-        <p className="text-xs text-slate-600 mt-1 max-w-sm">
+      <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-12 text-center text-slate-500 h-[500px] flex flex-col items-center justify-center">
+        <Box className="w-10 h-10 mb-3 text-slate-600" />
+        <h4 className="text-sm font-semibold text-slate-300">Interactive 3D Terrain Flythrough</h4>
+        <p className="text-xs text-slate-500 mt-1 max-w-sm">
           Awaiting depth and relative surface matrix to synthesize 3D polygonal terrain mesh.
         </p>
       </div>
@@ -141,43 +271,43 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, imag
   }
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/90 shadow-2xl overflow-hidden flex flex-col">
+    <div className="rounded-lg border border-slate-800 bg-slate-950 overflow-hidden flex flex-col">
       {/* 3D Viewer Header Controls Bar */}
-      <div className="p-3.5 bg-slate-900/90 border-b border-slate-800/90 flex flex-wrap items-center justify-between gap-3">
+      <div className="p-3 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Compass className="w-4 h-4 text-cyan-400" />
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
+          <span className="text-sm font-semibold text-slate-100">
             Interactive 3D Terrain Flythrough
           </span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/60">
-            Three.js / WebGL 60 FPS
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+            Three.js / WebGL
           </span>
         </div>
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Texture Mode Selector */}
-          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
+          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-md border border-slate-800 text-xs">
             <button
               onClick={() => setTextureMode('rgb')}
-              className={`px-2 py-1 rounded text-[11px] font-medium transition-all ${
-                textureMode === 'rgb' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-200'
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                textureMode === 'rgb' ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               Satellite RGB
             </button>
             <button
               onClick={() => setTextureMode('depth')}
-              className={`px-2 py-1 rounded text-[11px] font-medium transition-all ${
-                textureMode === 'depth' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-200'
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                textureMode === 'depth' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               Depth Map
             </button>
             <button
               onClick={() => setTextureMode('shaded')}
-              className={`px-2 py-1 rounded text-[11px] font-medium transition-all ${
-                textureMode === 'shaded' ? 'bg-indigo-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-slate-200'
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+                textureMode === 'shaded' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               Shaded Relief
@@ -187,10 +317,10 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, imag
           {/* Wireframe Toggle */}
           <button
             onClick={() => setWireframe(!wireframe)}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors flex items-center gap-1.5 ${
               wireframe
-                ? 'bg-cyan-950 text-cyan-300 border-cyan-500/70'
-                : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                ? 'bg-slate-800 text-cyan-300 border-cyan-500/70'
+                : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-slate-200'
             }`}
           >
             <Box className="w-3.5 h-3.5" />
@@ -200,10 +330,10 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, imag
           {/* Auto Rotate Toggle */}
           <button
             onClick={() => setAutoRotate(!autoRotate)}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all flex items-center gap-1.5 ${
+            className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors flex items-center gap-1.5 ${
               autoRotate
-                ? 'bg-emerald-950 text-emerald-300 border-emerald-500/70'
-                : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                ? 'bg-slate-800 text-emerald-300 border-emerald-500/70'
+                : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-slate-200'
             }`}
           >
             {autoRotate ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
@@ -213,20 +343,20 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, imag
           {/* Toggle Ground Grid */}
           <button
             onClick={() => setShowGrid(!showGrid)}
-            className={`p-1.5 rounded-lg border text-xs transition-all ${
+            className={`p-1.5 rounded-md border text-xs transition-colors ${
               showGrid
-                ? 'bg-slate-800 text-cyan-400 border-slate-700'
+                ? 'bg-slate-800 text-slate-200 border-slate-600'
                 : 'bg-slate-900 text-slate-500 border-slate-800'
             }`}
             title="Toggle ground reference grid"
           >
-            <GridIcon className="w-4 h-4" />
+            <GridIcon className="w-3.5 h-3.5" />
           </button>
 
           {/* Reset Camera Button */}
           <button
             onClick={handleResetCamera}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-medium transition flex items-center gap-1.5 active:scale-95"
+            className="px-2.5 py-1 rounded-md bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-medium transition flex items-center gap-1.5 active:scale-95"
             title="Reset Orbit Camera"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -236,26 +366,27 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, imag
       </div>
 
       {/* WebGL Canvas Container */}
-      <div className="relative h-[550px] w-full bg-slate-950">
+      <div className="relative h-[550px] w-full bg-[#070b14]">
         <Canvas
           shadows
-          camera={{ position: [8, 9, 10], fov: 45 }}
+          camera={{ position: [9, 8, 11], fov: 45 }}
           className="cursor-grab active:cursor-grabbing"
         >
           <color attach="background" args={['#070b14']} />
-          <ambientLight intensity={0.8} />
+          <ambientLight intensity={0.6} />
           <directionalLight
-            position={[12, 18, 10]}
-            intensity={1.5}
+            position={[10, 16, 8]}
+            intensity={1.6}
             castShadow
             shadow-mapSize={[1024, 1024]}
           />
-          <directionalLight position={[-10, 8, -10]} intensity={0.4} color="#60a5fa" />
+          <directionalLight position={[-10, 10, -8]} intensity={0.4} color="#94a3b8" />
+          <directionalLight position={[0, -6, 0]} intensity={0.15} color="#475569" />
 
           {/* Reference ground grid */}
           {showGrid && (
             <Grid
-              position={[0, -0.05, 0]}
+              position={[0, -0.01, 0]}
               args={[16, 16]}
               cellSize={1}
               cellThickness={1}
@@ -268,8 +399,8 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, imag
             />
           )}
 
-          {/* Centered Terrain Mesh */}
-          <Center top>
+          {/* Centered Terrain Mesh with Solid Base */}
+          <Center bottom cacheKey={exaggeration}>
             <TerrainMesh
               meshData={meshData}
               textureUrl={activeTextureUrl}
@@ -289,18 +420,19 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, imag
             dampingFactor={0.08}
             minDistance={3}
             maxDistance={35}
-            maxPolarAngle={Math.PI / 2 - 0.05} // Prevent camera from going underneath terrain
+            maxPolarAngle={Math.PI / 2 - 0.02}
+            target={[0, 1.0, 0]}
           />
         </Canvas>
 
         {/* Visual Height Exaggeration Slider Control (HUD Overlay) */}
-        <div className="absolute bottom-4 left-4 z-10 bg-slate-950/85 backdrop-blur-md p-3.5 rounded-xl border border-slate-800 shadow-xl max-w-xs sm:max-w-sm space-y-2">
+        <div className="absolute bottom-4 left-4 z-10 bg-slate-950/90 p-3 rounded-lg border border-slate-800 max-w-xs sm:max-w-sm space-y-1.5 text-xs">
           <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5 font-semibold text-slate-200">
-              <Sliders className="w-3.5 h-3.5 text-cyan-400" />
+            <div className="flex items-center gap-1.5 font-medium text-slate-200">
+              <Sliders className="w-3.5 h-3.5 text-slate-400" />
               <span>Visual Height Exaggeration</span>
             </div>
-            <span className="font-mono text-cyan-400 font-bold bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-900/60 text-xs">
+            <span className="font-mono text-cyan-400 font-semibold bg-slate-900 px-2 py-0.5 rounded border border-slate-800 text-xs">
               {exaggeration.toFixed(1)}×
             </span>
           </div>
@@ -312,7 +444,7 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, imag
             step="0.1"
             value={exaggeration}
             onChange={(e) => setExaggeration(parseFloat(e.target.value))}
-            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+            className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
           />
 
           <div className="flex justify-between text-[10px] text-slate-500 font-mono">
@@ -321,21 +453,21 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, imag
             <span>3.5× Pronounced</span>
           </div>
 
-          <p className="text-[10px] text-slate-400 border-t border-slate-800/80 pt-1.5 italic">
+          <p className="text-[10px] text-slate-400 border-t border-slate-800 pt-1">
             *Visual enhancement multiplier only. Does not alter scientific relative elevation matrix.
           </p>
         </div>
 
         {/* OrbitControls Mouse Helper HUD */}
-        <div className="absolute top-4 right-4 z-10 hidden sm:flex flex-col gap-1 bg-slate-950/80 backdrop-blur-md px-3 py-2 rounded-lg border border-slate-800 text-[11px] text-slate-400 font-mono">
+        <div className="absolute top-4 right-4 z-10 hidden sm:flex flex-col gap-1 bg-slate-950/90 px-3 py-2 rounded-md border border-slate-800 text-[11px] text-slate-400 font-mono">
           <div className="flex items-center gap-1.5">
-            <span className="text-cyan-400 font-bold">Left Click + Drag:</span> Rotate View
+            <span className="text-slate-300 font-medium">Left Click + Drag:</span> Rotate View
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-cyan-400 font-bold">Scroll Wheel:</span> Zoom In / Out
+            <span className="text-slate-300 font-medium">Scroll Wheel:</span> Zoom In / Out
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-cyan-400 font-bold">Right Click + Drag:</span> Pan Terrain
+            <span className="text-slate-300 font-medium">Right Click + Drag:</span> Pan Terrain
           </div>
         </div>
 

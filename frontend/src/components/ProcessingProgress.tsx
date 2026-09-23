@@ -29,10 +29,10 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({ stage, e
   const isError = stage === 'error';
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/90 p-4 shadow-xl">
-      <div className="flex items-center justify-between mb-3.5">
+    <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <span className="text-xs font-semibold text-slate-300">
             Pipeline Execution Flow
           </span>
           {stage !== 'complete' && !isError && (
@@ -43,15 +43,15 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({ stage, e
           )}
         </div>
         {elapsedMs !== undefined && (
-          <span className="text-xs font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-900/50">
+          <span className="text-xs font-mono text-cyan-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
             {(elapsedMs / 1000).toFixed(1)}s elapsed
           </span>
         )}
       </div>
 
       {isError ? (
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-rose-950/40 border border-rose-800/60 text-rose-300 text-sm">
-          <AlertCircle className="w-5 h-5 shrink-0 text-rose-400" />
+        <div className="flex items-center gap-2.5 p-3 rounded bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
           <span>An error occurred during pipeline execution. Check console or alert message below.</span>
         </div>
       ) : (
@@ -64,26 +64,26 @@ export const ProcessingProgress: React.FC<ProcessingProgressProps> = ({ stage, e
             return (
               <div
                 key={s.key}
-                className={`relative flex flex-col items-center text-center p-3 rounded-xl border transition-all duration-300 ${
+                className={`relative flex flex-col items-center text-center p-3 rounded-md border transition-colors ${
                   isActive
-                    ? 'bg-cyan-950/50 border-cyan-500/70 shadow-lg shadow-cyan-900/20'
+                    ? 'bg-slate-900 border-cyan-500 text-cyan-300'
                     : isCompleted
-                    ? 'bg-slate-900/60 border-emerald-800/50 text-slate-300'
-                    : 'bg-slate-950/40 border-slate-800/40 text-slate-500'
+                    ? 'bg-slate-900/60 border-slate-700 text-slate-300'
+                    : 'bg-slate-950/50 border-slate-800/80 text-slate-500'
                 }`}
               >
                 <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center mb-1.5 ${
+                  className={`w-7 h-7 rounded-md flex items-center justify-center mb-1.5 ${
                     isActive
-                      ? 'bg-cyan-500 text-slate-950 animate-bounce'
+                      ? 'bg-cyan-600 text-white'
                       : isCompleted
-                      ? 'bg-emerald-500/20 text-emerald-400'
-                      : 'bg-slate-800 text-slate-500'
+                      ? 'bg-slate-800 text-emerald-400'
+                      : 'bg-slate-800/70 text-slate-500'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-3.5 h-3.5" />
                 </div>
-                <span className={`text-xs font-semibold ${isActive ? 'text-cyan-300' : isCompleted ? 'text-emerald-300' : 'text-slate-400'}`}>
+                <span className={`text-xs font-medium ${isActive ? 'text-cyan-300' : isCompleted ? 'text-slate-200' : 'text-slate-400'}`}>
                   {s.label}
                 </span>
                 <span className="text-[10px] text-slate-500 mt-0.5 leading-tight">
