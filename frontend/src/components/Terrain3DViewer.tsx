@@ -94,25 +94,27 @@ const TerrainMesh: React.FC<TerrainMeshProps> = ({
   useEffect(() => {
     if (!topGeometry || !baseGeometry || !height_map) return;
     const pos = topGeometry.attributes.position;
-    const heightFactor = 2.4 * exaggeration;
+    const heightFactor = 3.6 * exaggeration;
 
-    // Update top terrain surface heights
+    // Displace each terrain vertex by its relative surface elevation value
     for (let i = 0; i < pos.count; i++) {
       const h = height_map[i] ?? 0;
       pos.setZ(i, h * heightFactor);
     }
     pos.needsUpdate = true;
     topGeometry.computeVertexNormals();
+    topGeometry.computeBoundingBox();
+    topGeometry.computeBoundingSphere();
 
     // Solid vertical base underneath the terrain
-    const baseZ = -0.5;
+    const baseZ = -0.6;
     const numPerimeter = perimeterIndices.length;
     const totalVertices = numPerimeter * 6 + 6;
     const basePositions = new Float32Array(totalVertices * 3);
 
     let offset = 0;
 
-    // Side walls connecting terrain surface edges to the base
+    // Side walls connecting terrain surface edges down to the base
     for (let i = 0; i < numPerimeter; i++) {
       const idxA = perimeterIndices[i];
       const idxB = perimeterIndices[(i + 1) % numPerimeter];
@@ -189,6 +191,8 @@ const TerrainMesh: React.FC<TerrainMeshProps> = ({
       new THREE.BufferAttribute(basePositions, 3)
     );
     baseGeometry.computeVertexNormals();
+    baseGeometry.computeBoundingBox();
+    baseGeometry.computeBoundingSphere();
   }, [topGeometry, baseGeometry, height_map, exaggeration, perimeterIndices, grid_width, grid_height]);
 
   return (
@@ -202,18 +206,20 @@ const TerrainMesh: React.FC<TerrainMeshProps> = ({
       >
         {textureMode === 'shaded' ? (
           <meshStandardMaterial
-            roughness={0.7}
+            roughness={0.5}
             metalness={0.1}
             color="#cbd5e1"
             wireframe={wireframe}
             flatShading={false}
+            side={THREE.DoubleSide}
           />
         ) : (
           <meshStandardMaterial
             map={texture ?? undefined}
-            roughness={0.65}
-            metalness={0.05}
+            roughness={0.55}
+            metalness={0.08}
             wireframe={wireframe}
+            side={THREE.DoubleSide}
           />
         )}
       </mesh>
@@ -225,7 +231,7 @@ const TerrainMesh: React.FC<TerrainMeshProps> = ({
         castShadow
       >
         <meshStandardMaterial
-          color="#111827"
+          color="#0f172a"
           roughness={0.85}
           metalness={0.15}
           wireframe={wireframe}
@@ -369,19 +375,19 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, imag
       <div className="relative h-[550px] w-full bg-[#070b14]">
         <Canvas
           shadows
-          camera={{ position: [9, 8, 11], fov: 45 }}
+          camera={{ position: [8.5, 7.0, 9.5], fov: 42 }}
           className="cursor-grab active:cursor-grabbing"
         >
           <color attach="background" args={['#070b14']} />
-          <ambientLight intensity={0.6} />
+          <ambientLight intensity={0.5} />
           <directionalLight
-            position={[10, 16, 8]}
-            intensity={1.6}
+            position={[12, 16, 8]}
+            intensity={1.8}
             castShadow
             shadow-mapSize={[1024, 1024]}
           />
-          <directionalLight position={[-10, 10, -8]} intensity={0.4} color="#94a3b8" />
-          <directionalLight position={[0, -6, 0]} intensity={0.15} color="#475569" />
+          <directionalLight position={[-10, 10, -8]} intensity={0.5} color="#94a3b8" />
+          <directionalLight position={[0, -6, 0]} intensity={0.2} color="#334155" />
 
           {/* Reference ground grid */}
           {showGrid && (
@@ -400,7 +406,7 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, imag
           )}
 
           {/* Centered Terrain Mesh with Solid Base */}
-          <Center bottom cacheKey={exaggeration}>
+          <Center bottom cacheKey={`${exaggeration}-${meshData.grid_width}-${meshData.height_map?.length}`}>
             <TerrainMesh
               meshData={meshData}
               textureUrl={activeTextureUrl}
@@ -421,7 +427,7 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({ meshData, imag
             minDistance={3}
             maxDistance={35}
             maxPolarAngle={Math.PI / 2 - 0.02}
-            target={[0, 1.0, 0]}
+            target={[0, 1.2, 0]}
           />
         </Canvas>
 
